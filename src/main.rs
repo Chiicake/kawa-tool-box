@@ -5,7 +5,7 @@ use gtk::prelude::*;
 use rig::{completion::Prompt, providers};
 use rig::agent::Agent;
 use rig::client::completion::{CompletionClientDyn, CompletionModelHandle};
-use gtk::{Application, ApplicationWindow, Button, Entry, Label, Notebook, Orientation, PositionType, TextBuffer, TextView, Box as GtkBox, ScrolledWindow, TextTagTable};
+use gtk::{Application, ApplicationWindow, Box as GtkBox, Button, Entry, Label, Notebook, Orientation, PositionType, ScrolledWindow, TextBuffer, TextTagTable, TextView};
 
 
 fn main() {
@@ -106,11 +106,11 @@ fn create_ai_tab(output_buffer: &TextBuffer, output_text: &TextView) -> GtkBox {
                 *agent_clone.borrow_mut() = Some(agent1);
             },
             Err(e) => {
-                append_to_output(&output_buffer_clone2, &output_text_clone2, &format!("Error: {}\n", e));
+                crate::append_to_output(&output_buffer_clone2, &output_text_clone2, &format!("Error: {}\n", e));
                 return;
             }
         };
-        append_to_output(&output_buffer_clone2, &output_text_clone2, "Init success\n");
+        crate::append_to_output(&output_buffer_clone2, &output_text_clone2, "Init success\n");
     });
 
     let output_buffer_clone3 = output_buffer.clone();
@@ -126,7 +126,7 @@ fn create_ai_tab(output_buffer: &TextBuffer, output_text: &TextView) -> GtkBox {
         let agent_instance = match agent_ref.as_ref() {
             Some(agent) => agent,
             None => {
-                append_to_output(&output_buffer_clone3, &output_text_clone3, "Error: Agent not initialized\n");
+                crate::append_to_output(&output_buffer_clone3, &output_text_clone3, "Error: Agent not initialized\n");
                 return;
             }
         };
@@ -135,10 +135,10 @@ fn create_ai_tab(output_buffer: &TextBuffer, output_text: &TextView) -> GtkBox {
         match res {
             Ok(res) => message = res + "\n",
             Err(e) => {
-                append_to_output(&output_buffer_clone3, &output_text_clone3, &format!("Error: {} \n", e));
+                crate::append_to_output(&output_buffer_clone3, &output_text_clone3, &format!("Error: {} \n", e));
             }
         }
-        append_to_output(&output_buffer_clone3, &output_text_clone3, &message);
+        crate::append_to_output(&output_buffer_clone3, &output_text_clone3, &message);
     });
     ai_box
 }
@@ -178,21 +178,10 @@ fn create_excel_tab(output_buffer: &TextBuffer, output_text: &TextView) -> GtkBo
             }
         }
 
-        append_to_output(&output_buffer_clone, &output_text_clone, &output);
+        crate::append_to_output(&output_buffer_clone, &output_text_clone, &output);
     });
 
     excel_box
-}
-
-
-fn append_to_output(output_buffer: &TextBuffer, output_text: &TextView, text: &str) {
-    // Append to output buffer
-    let mut end_iter = output_buffer.end_iter();
-    output_buffer.insert(&mut end_iter, text);
-
-    // Scroll to bottom
-    let end_mark = output_buffer.create_mark(None, &output_buffer.end_iter(), false).unwrap();
-    output_text.scroll_to_mark(&end_mark, 0.0, false, 0.0, 0.0);
 }
 
 #[tokio::main]

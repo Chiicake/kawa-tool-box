@@ -39,13 +39,12 @@ pub fn excel_to_json(file_path: &str, target_path: &str) -> Result<(), Box<dyn E
         for (i, cell) in row.iter().enumerate() {
             row_map.insert(header[i].clone(), cell.to_string());
         }
-        let json = serde_json::to_string(&row_map)?;
+        let json = serde_json::to_string(&row_map)? + ",\n";
         // Append to file
         let mut file = fs::OpenOptions::new()
             .append(true)
             .open(target_path.trim())?;
         file.write_all(json.as_bytes())?;
-        file.write_all(b",\n")?;
         Ok(())
     })?;
     Ok(())
