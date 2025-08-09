@@ -106,11 +106,11 @@ fn create_ai_tab(output_buffer: &TextBuffer, output_text: &TextView) -> GtkBox {
                 *agent_clone.borrow_mut() = Some(agent1);
             },
             Err(e) => {
-                crate::append_to_output(&output_buffer_clone2, &output_text_clone2, &format!("Error: {}\n", e));
+                kawa_tool_box::utils::append_to_output(&output_buffer_clone2, &output_text_clone2, &format!("Error: {}\n", e));
                 return;
             }
         };
-        crate::append_to_output(&output_buffer_clone2, &output_text_clone2, "Init success\n");
+        kawa_tool_box::utils::append_to_output(&output_buffer_clone2, &output_text_clone2, "Init success\n");
     });
 
     let output_buffer_clone3 = output_buffer.clone();
@@ -126,7 +126,7 @@ fn create_ai_tab(output_buffer: &TextBuffer, output_text: &TextView) -> GtkBox {
         let agent_instance = match agent_ref.as_ref() {
             Some(agent) => agent,
             None => {
-                crate::append_to_output(&output_buffer_clone3, &output_text_clone3, "Error: Agent not initialized\n");
+                kawa_tool_box::utils::append_to_output(&output_buffer_clone3, &output_text_clone3, "Error: Agent not initialized\n");
                 return;
             }
         };
@@ -135,10 +135,10 @@ fn create_ai_tab(output_buffer: &TextBuffer, output_text: &TextView) -> GtkBox {
         match res {
             Ok(res) => message = res + "\n",
             Err(e) => {
-                crate::append_to_output(&output_buffer_clone3, &output_text_clone3, &format!("Error: {} \n", e));
+                kawa_tool_box::utils::append_to_output(&output_buffer_clone3, &output_text_clone3, &format!("Error: {} \n", e));
             }
         }
-        crate::append_to_output(&output_buffer_clone3, &output_text_clone3, &message);
+        kawa_tool_box::utils::append_to_output(&output_buffer_clone3, &output_text_clone3, &message);
     });
     ai_box
 }
@@ -173,12 +173,12 @@ fn create_excel_tab(output_buffer: &TextBuffer, output_text: &TextView) -> GtkBo
             output.push_str("Error: Excel path is empty\n");
         } else {
             match kawa_tool_box::excel_to_json(&excel_path, &target_path) {
-                Ok(_) => output.push_str(&format!("Successfully converted: {}\n", excel_path)),
+                Ok(json) => output.push_str(&*(json + &format!("Successfully converted: {}\n", excel_path))),
                 Err(e) => output.push_str(&format!("Error: {}\n", e))
             }
         }
 
-        crate::append_to_output(&output_buffer_clone, &output_text_clone, &output);
+        kawa_tool_box::utils::append_to_output(&output_buffer_clone, &output_text_clone, &output);
     });
 
     excel_box

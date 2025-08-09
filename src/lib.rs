@@ -1,3 +1,5 @@
+pub mod utils;
+
 use std::collections::HashMap;
 use std::error::Error;
 use std::{fs};
@@ -16,11 +18,12 @@ use calamine::{Reader, open_workbook, Xlsx};
 /// * `Ok(())` - If the file is read and written successfully
 /// * `Err(Box<dyn Error>)` - If the file is not read or written successfully
 
-pub fn excel_to_json(file_path: &str, target_path: &str) -> Result<(), Box<dyn Error>> {
+pub fn excel_to_json(file_path: &str, target_path: &str) -> Result<String, Box<dyn Error>> {
     let mut is_first_row = true;
     let mut header: Vec<String> = Vec::new();
     let mut workbook: Xlsx<_> = open_workbook(file_path)?;
     let range = workbook.worksheet_range("Sheet1")?;
+    let mut output = String::new();
     
     range.rows().try_for_each(|row_result| {
         let row = row_result;
@@ -45,7 +48,8 @@ pub fn excel_to_json(file_path: &str, target_path: &str) -> Result<(), Box<dyn E
             .append(true)
             .open(target_path.trim())?;
         file.write_all(json.as_bytes())?;
+        output.push_str(json.as_str());
         Ok(())
     })?;
-    Ok(())
+    Ok(output)
 }

@@ -1,3 +1,6 @@
+use gtk::{TextBuffer, TextView};
+use gtk::prelude::{TextBufferExt, TextViewExt};
+
 pub fn append_to_output(output_buffer: &TextBuffer, output_text: &TextView, text: &str) {
     // Append to output buffer
     let mut end_iter = output_buffer.end_iter();
