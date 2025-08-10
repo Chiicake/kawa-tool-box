@@ -22,8 +22,8 @@ fn build_ui(app: &Application) {
     let window = ApplicationWindow::builder()
         .application(app)
         .title("KawaToolBox")
-        .default_width(500)
-        .default_height(70)
+        .default_width(1200)
+        .default_height(270)
         .build();
 
     let notebook = Notebook::new();
@@ -70,6 +70,14 @@ fn create_ai_tab(output_buffer: &TextBuffer, output_text: &TextView) -> GtkBox {
     ai_box.set_margin_start(20);
     ai_box.set_margin_end(20);
 
+    // Add model selection combo box
+    let model_combo = gtk::ComboBoxText::new();
+    model_combo.append_text("Qwen3:4B");
+    model_combo.append_text("llama2:7b");
+    model_combo.append_text("Qwen3:32B");
+    model_combo.set_active(Some(0)); // Select first model by default
+    ai_box.pack_start(&model_combo, false, false, 0);
+
     // Initial state with button
     let init_button = Button::with_label("Init");
     init_button.set_size_request(100, 40);
@@ -100,7 +108,7 @@ fn create_ai_tab(output_buffer: &TextBuffer, output_text: &TextView) -> GtkBox {
 
     init_button.connect_clicked(move |_| {
         // Placeholder initialization logic
-        let res = init();
+        let res = init_ollama(&*model_combo.active_text().unwrap().to_string());
         match res {
             Ok(agent1) => {
                 *agent_clone.borrow_mut() = Some(agent1);
@@ -110,7 +118,24 @@ fn create_ai_tab(output_buffer: &TextBuffer, output_text: &TextView) -> GtkBox {
                 return;
             }
         };
-        kawa_tool_box::utils::append_to_output(&output_buffer_clone2, &output_text_clone2, "Init success\n");
+        let agent_ref = agent_clone.borrow();
+        let agent_instance = match agent_ref.as_ref() {
+            Some(agent) => agent,
+            None => {
+                kawa_tool_box::utils::append_to_output(&output_buffer_clone2, &output_text_clone2, "Error: Agent not initialized\n");
+                return;
+            }
+        };
+        let res = chat(&agent_instance, "hi");
+        match res {
+            Ok(res) => {
+                kawa_tool_box::utils::append_to_output(&output_buffer_clone2, &output_text_clone2, res.as_str());
+                kawa_tool_box::utils::append_to_output(&output_buffer_clone2, &output_text_clone2, "\n");
+            },
+            Err(e) => {
+                kawa_tool_box::utils::append_to_output(&output_buffer_clone2, &output_text_clone2, &format!("Error: {} \n", e));
+            }
+        }
     });
 
     let output_buffer_clone3 = output_buffer.clone();
@@ -139,6 +164,7 @@ fn create_ai_tab(output_buffer: &TextBuffer, output_text: &TextView) -> GtkBox {
             }
         }
         kawa_tool_box::utils::append_to_output(&output_buffer_clone3, &output_text_clone3, &message);
+        kawa_tool_box::utils::append_to_output(&output_buffer_clone3, &output_text_clone3, "\n");
     });
     ai_box
 }
@@ -185,13 +211,12 @@ fn create_excel_tab(output_buffer: &TextBuffer, output_text: &TextView) -> GtkBo
 }
 
 #[tokio::main]
-async fn init() ->Result<Agent<CompletionModelHandle<'static>>, Box<dyn core::error::Error>> {
+async fn init_ollama(model: &str) ->Result<Agent<CompletionModelHandle<'static>>, Box<dyn core::error::Error>> {
     let client = providers::ollama::Client::builder().base_url("http://localhost:11434/").build().unwrap();
-    let v1 = client.agent("qwen3:32B") // .agent("deepseek-r1:latest")
+    let v1 = client.agent(model) // .agent("deepseek-r1:latest")
         // preamble
         .preamble("")
         .build();
-
     Ok(v1)
 }
 
