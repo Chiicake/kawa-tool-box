@@ -1,8 +1,7 @@
 # kawa-tool-box
 
 ## How to use
-For MacOS
-install ollama first
+For MacOS: install ollama first
 ```bash
 ollama run Qwen3:4B
 brew install gtk+3

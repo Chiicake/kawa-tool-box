@@ -78,10 +78,9 @@ fn create_ai_tab(output_buffer: &TextBuffer, output_text: &TextView) -> GtkBox {
     model_combo.set_active(Some(0)); // Select first model by default
     ai_box.pack_start(&model_combo, false, false, 0);
 
-    // Initial state with button
-    let init_button = Button::with_label("Init");
-    init_button.set_size_request(100, 40);
-    ai_box.pack_start(&init_button, false, false, 0);
+    let format_input = Entry::new();
+    format_input.set_placeholder_text(Some("JSON format..."));
+    ai_box.pack_start(&format_input, true, true, 0);
 
 
     // Create success UI elements (initially hidden)
@@ -89,7 +88,7 @@ fn create_ai_tab(output_buffer: &TextBuffer, output_text: &TextView) -> GtkBox {
     success_box.set_visible(false);
 
     let input_entry = Entry::new();
-    input_entry.set_placeholder_text(Some("Input..."));
+    input_entry.set_placeholder_text(Some("Data..."));
 
     let send_button = Button::with_label("Submit");
 
@@ -100,47 +99,24 @@ fn create_ai_tab(output_buffer: &TextBuffer, output_text: &TextView) -> GtkBox {
     success_box.pack_start(&entry_box, false, false, 0);
     ai_box.pack_start(&success_box, true, true, 0);
 
-
-    let output_buffer_clone2 = output_buffer.clone();
-    let output_text_clone2 = output_text.clone();
     let agent = Rc::new(RefCell::new(None));
     let agent_clone = Rc::clone(&agent);
 
-    init_button.connect_clicked(move |_| {
-        // Placeholder initialization logic
-        let res = init_ollama(&*model_combo.active_text().unwrap().to_string());
+    let output_buffer_clone3 = output_buffer.clone();
+    let output_text_clone3 = output_text.clone();
+    send_button.connect_clicked(move |_| {
+        let preamble = format!("You are a json formatter, the output json format is: {}, the data will give you in next message", format_input.text().to_string());
+
+        let res = init_ollama(&*model_combo.active_text().unwrap().to_string(), &preamble);
         match res {
             Ok(agent1) => {
                 *agent_clone.borrow_mut() = Some(agent1);
             },
             Err(e) => {
-                kawa_tool_box::utils::append_to_output(&output_buffer_clone2, &output_text_clone2, &format!("Error: {}\n", e));
+                kawa_tool_box::utils::append_to_output(&output_buffer_clone3, &output_text_clone3, &format!("Error: {}\n", e));
                 return;
             }
         };
-        let agent_ref = agent_clone.borrow();
-        let agent_instance = match agent_ref.as_ref() {
-            Some(agent) => agent,
-            None => {
-                kawa_tool_box::utils::append_to_output(&output_buffer_clone2, &output_text_clone2, "Error: Agent not initialized\n");
-                return;
-            }
-        };
-        let res = chat(&agent_instance, "hi");
-        match res {
-            Ok(res) => {
-                kawa_tool_box::utils::append_to_output(&output_buffer_clone2, &output_text_clone2, res.as_str());
-                kawa_tool_box::utils::append_to_output(&output_buffer_clone2, &output_text_clone2, "\n");
-            },
-            Err(e) => {
-                kawa_tool_box::utils::append_to_output(&output_buffer_clone2, &output_text_clone2, &format!("Error: {} \n", e));
-            }
-        }
-    });
-
-    let output_buffer_clone3 = output_buffer.clone();
-    let output_text_clone3 = output_text.clone();
-    send_button.connect_clicked(move |_| {
         let input = input_entry.text().to_string();
         if input.is_empty() {
             return;
@@ -211,11 +187,11 @@ fn create_excel_tab(output_buffer: &TextBuffer, output_text: &TextView) -> GtkBo
 }
 
 #[tokio::main]
-async fn init_ollama(model: &str) ->Result<Agent<CompletionModelHandle<'static>>, Box<dyn core::error::Error>> {
+async fn init_ollama(model: &str, preamble: &str) ->Result<Agent<CompletionModelHandle<'static>>, Box<dyn core::error::Error>> {
     let client = providers::ollama::Client::builder().base_url("http://localhost:11434/").build().unwrap();
     let v1 = client.agent(model) // .agent("deepseek-r1:latest")
         // preamble
-        .preamble("")
+        .preamble(preamble)
         .build();
     Ok(v1)
 }
