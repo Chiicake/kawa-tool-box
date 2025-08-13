@@ -7,7 +7,8 @@ use rig::{completion::Prompt, providers};
 use rig::agent::Agent;
 use rig::client::completion::{CompletionClientDyn, CompletionModelHandle};
 use gtk::{Application, ApplicationWindow, Box as GtkBox, Button, Entry, Label, Notebook, Orientation, PositionType, ScrolledWindow, TextBuffer, TextTagTable, TextView};
-
+use kawa_tool_box::httphandler::handle_connection;
+use kawa_tool_box::threadpool;
 
 fn main() {
     let application = Application::builder()
@@ -19,15 +20,19 @@ fn main() {
     application.run();
 
     start_http_server();
+
 }
 
 fn start_http_server() {
     let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+    let pool = threadpool::ThreadPool::new(4);
 
     for stream in listener.incoming() {
         let stream = stream.unwrap();
 
-        kawa_tool_box::httphandler::handle_connection(stream);
+        pool.execute(|| {
+            handle_connection(stream);
+        });
     }
 }
 
