@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::net::TcpListener;
 use std::rc::Rc;
+use std::thread;
 use kawa_tool_box;
 use gtk::prelude::*;
 use rig::{completion::Prompt, providers};
@@ -11,6 +12,10 @@ use kawa_tool_box::httphandler::handle_connection;
 use kawa_tool_box::threadpool;
 
 fn main() {
+    thread::spawn(|| {
+        start_http_server();
+    });
+
     let application = Application::builder()
         .application_id("com.kawa.kawatoolbox")
         .build();
@@ -18,9 +23,6 @@ fn main() {
     application.connect_activate(build_ui);
 
     application.run();
-
-    start_http_server();
-
 }
 
 fn start_http_server() {
