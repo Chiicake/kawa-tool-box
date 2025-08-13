@@ -1,4 +1,5 @@
 pub mod utils;
+pub mod httphandler;
 
 use std::collections::HashMap;
 use std::error::Error;

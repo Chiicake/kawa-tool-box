@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::net::TcpListener;
 use std::rc::Rc;
 use kawa_tool_box;
 use gtk::prelude::*;
@@ -16,6 +17,18 @@ fn main() {
     application.connect_activate(build_ui);
 
     application.run();
+
+    start_http_server();
+}
+
+fn start_http_server() {
+    let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+
+    for stream in listener.incoming() {
+        let stream = stream.unwrap();
+
+        kawa_tool_box::httphandler::handle_connection(stream);
+    }
 }
 
 fn build_ui(app: &Application) {
