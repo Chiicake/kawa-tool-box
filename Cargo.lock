@@ -1080,6 +1080,7 @@ dependencies = [
  "calamine",
  "gtk",
  "rig-core",
+ "serde",
  "serde_json",
  "tokio",
 ]

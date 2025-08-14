@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toolbox Configuration</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { padding: 10px 15px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        .message { margin-top: 15px; padding: 10px; border-radius: 4px; }
+        .success { background-color: #dff0d8; color: #3c763d; }
+        .error { background-color: #f2dede; color: #a94442; }
+    </style>
+</head>
+<body>
+    <h1>Toolbox Configuration</h1>
+    <form id="configForm">
+        <div class="form-group">
+            <label for="excel_path">Default Excel Path:</label>
+            <input type="text" id="excel_path" name="excel_path" required>
+        </div>
+        <div class="form-group">
+            <label for="target_path">Target Path:</label>
+            <input type="text" id="target_path" name="target_path" required>
+        </div>
+        <button type="submit">Save Configuration</button>
+    </form>
+    <div id="message" class="message" style="display: none;"></div>
+
+    <script>
+        document.getElementById('configForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/save_config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                const result = await response.json();
+                const messageEl = document.getElementById('message');
+                messageEl.style.display = 'block';
+
+                if (response.ok) {
+                    messageEl.className = 'message success';
+                    messageEl.textContent = 'Configuration saved successfully!';
+                } else {
+                    messageEl.className = 'message error';
+                    messageEl.textContent = `Error: ${result.error || 'Save failed'}`;
+                }
+            } catch (error) {
+                const messageEl = document.getElementById('message');
+                messageEl.style.display = 'block';
+                messageEl.className = 'message error';
+                messageEl.textContent = `Network error: ${error.message}`;
+            }
+        });
+
+        // Load current configuration from server when page loads
+        window.addEventListener('load', async function() {
+            try {
+                const response = await fetch('/get_config');
+                if (response.ok) {
+                    const config = await response.json();
+                    document.getElementById('excel_path').value = config.excel_path || '';
+                    document.getElementById('target_path').value = config.target_path || '';
+                }
+            } catch (error) {
+                console.error('Failed to load configuration:', error);
+            }
+        });
+    </script>
+</body>
+</html>

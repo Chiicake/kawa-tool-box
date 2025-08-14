@@ -8,8 +8,9 @@ use rig::{completion::Prompt, providers};
 use rig::agent::Agent;
 use rig::client::completion::{CompletionClientDyn, CompletionModelHandle};
 use gtk::{Application, ApplicationWindow, Box as GtkBox, Button, Entry, Label, Notebook, Orientation, PositionType, ScrolledWindow, TextBuffer, TextTagTable, TextView};
-use kawa_tool_box::httphandler::handle_connection;
-use kawa_tool_box::threadpool;
+use kawa_tool_box::http_handler::handle_connection;
+use kawa_tool_box::thread_pool;
+use kawa_tool_box::http_handler::{Config, read_config};
 
 fn main() {
     thread::spawn(|| {
@@ -27,7 +28,7 @@ fn main() {
 
 fn start_http_server() {
     let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
-    let pool = threadpool::ThreadPool::new(4);
+    let pool = thread_pool::ThreadPool::new(4);
 
     for stream in listener.incoming() {
         let stream = stream.unwrap();
@@ -166,7 +167,6 @@ fn create_ai_tab(output_buffer: &TextBuffer, output_text: &TextView) -> GtkBox {
 }
 
 fn create_excel_tab(output_buffer: &TextBuffer, output_text: &TextView) -> GtkBox {
-
     let excel_box = GtkBox::new(Orientation::Vertical, 5);
     excel_box.set_homogeneous(true);
 
@@ -177,6 +177,11 @@ fn create_excel_tab(output_buffer: &TextBuffer, output_text: &TextView) -> GtkBo
     let target_path = Entry::new();
     target_path.set_placeholder_text(Some("Target path"));
     excel_box.pack_start(&target_path, true, true, 0);
+
+    // Read configuration and set default values
+    let config = read_config();
+    text_input.set_text(&config.excel_path);
+    target_path.set_text(&config.target_path);
 
     let button = Button::with_label("Excel to JSON");
     excel_box.pack_start(&button, true, true, 0);
