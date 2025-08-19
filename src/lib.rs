@@ -1,6 +1,7 @@
 pub mod utils;
 pub mod http_handler;
 pub mod thread_pool;
+pub mod server;
 
 use std::collections::HashMap;
 use std::error::Error;
