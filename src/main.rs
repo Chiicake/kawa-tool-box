@@ -11,8 +11,7 @@ use gtk::{Application, ApplicationWindow, Box as GtkBox, Button, Entry, Label, N
 use kawa_tool_box::http_handler::handle_connection;
 use kawa_tool_box::thread_pool;
 use kawa_tool_box::http_handler::{Config, read_config};
-#[tokio::main]
-async fn main() {
+fn main() {
     thread::spawn(|| {
         start_http_server();
     });
